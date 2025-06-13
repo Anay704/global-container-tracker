@@ -62,24 +62,30 @@ Manufacturers and logistics teams shipping internationally face:
 ---
 
 
-📈 Roadmap for the Prototype:
+## 📈 Roadmap for the Prototype:
 ✅ Interactive shipment detail map
+
 ✅ Filters by carrier, status, port
+
 ✅ Analytics page with real-time insights
+
 ⏳ Backend integration with FastAPI
+
 ⏳ User authentication (multi-user support)
+
 ⏳ Real-time carrier API integrations (Maersk, UPS, etc.)
+
 ⏳ Admin dashboard for logistics managers
 
-🤝 Contributing
+---
+
+## 🤝 Contributing
 Have shipping experience or frontend/backend skills? PRs and suggestions are welcome.
 
-📫 Contact
+---
+
+## 📫 Contact
 Created by Anay Baheti (anaybaheti7@gmail.com) – feel free to reach out for collaborations or demos.
 
 This project was built to solve a real operational pain point in international logistics. If you're a shipping company, manufacturer, investor, or logistics software provider, let's talk.
-
-
-
-
 
