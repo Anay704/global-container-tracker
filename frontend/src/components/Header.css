@@ -1,0 +1,13 @@
+/* Header.css */
+header {
+    background-color: #1E293B;
+    color: white;
+    padding: 1rem 2rem;
+  }
+  
+  a {
+    color: #FACC15;
+    text-decoration: none;
+    margin: 0 1rem;
+  }
+  

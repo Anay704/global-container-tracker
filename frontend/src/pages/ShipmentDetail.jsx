@@ -1,63 +1,115 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { shipments } from "../mockData";
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { portCoordinates } from "../portCoordinates";
-import "../fixLeafletIcons";
-
-// Simple AI ETA adjustment logic
-const adjustETA = (shipment) => {
-  let delayDays = 0;
-  if (shipment.carrier === "Maersk") delayDays += 1;
-  if (["New York", "Los Angeles"].includes(shipment.destination)) delayDays += 2;
-
-  const etaDate = new Date(shipment.eta);
-  etaDate.setDate(etaDate.getDate() + delayDays);
-  return etaDate.toISOString().split("T")[0];
-};
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 const ShipmentDetail = () => {
   const { id } = useParams();
   const shipment = shipments.find((s) => s.id === id);
 
-  if (!shipment) return <p>Shipment not found</p>;
+  if (!shipment) {
+    return <h2>Shipment not found</h2>;
+  }
 
-  const originCoord = portCoordinates[shipment.origin];
-  const destCoord = portCoordinates[shipment.destination];
+  const {
+    id: trackingId,
+    carrier,
+    eta,
+    dispatch,
+    origin,
+    destination,
+    items
+  } = shipment;
 
   return (
     <div>
-      <h2>Shipment Details: {shipment.id}</h2>
-      <p><strong>Carrier:</strong> {shipment.carrier}</p>
-      <p><strong>Origin:</strong> {shipment.origin}</p>
-      <p><strong>Destination:</strong> {shipment.destination}</p>
-      <p><strong>Status:</strong> {shipment.status}</p>
-      <p><strong>Container Type:</strong> {shipment.container_type}</p>
-      <p><strong>Weight:</strong> {shipment.weight_kg} kg</p>
-      <p><strong>Original ETA:</strong> {shipment.eta}</p>
-      <p><strong>AI-Adjusted ETA:</strong> {adjustETA(shipment)}</p>
-      <p><strong>Milestones:</strong> {shipment.milestones.join(" → ")}</p>
+      <h2>📦 Shipment Details for: {trackingId}</h2>
+      <p><strong>Status:</strong> {
+        (() => {
+          const etaDate = new Date(eta);
+          const today = new Date();
+          const diff = Math.ceil((etaDate - today) / (1000 * 60 * 60 * 24));
+          return diff < 0 ? "Delayed 🔴" : diff <= 3 ? "At Risk 🟡" : "On Time 🟢";
+        })()
+      }</p>
+      <p><strong>Carrier:</strong> {carrier}</p>
+      <p><strong>Dispatch Date:</strong> {dispatch}</p>
+      <p><strong>ETA:</strong> {eta}</p>
+      <p><strong>From:</strong> {origin} → <strong>To:</strong> {destination}</p>
 
-      {(originCoord && destCoord) && (
-        <div style={{ height: "400px", marginTop: "2rem" }}>
-          <MapContainer
-            center={originCoord}
-            zoom={3}
-            scrollWheelZoom={false}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="© OpenStreetMap contributors"
-            />
-            <Marker position={originCoord}></Marker>
-            <Marker position={destCoord}></Marker>
-            <Polyline positions={[originCoord, destCoord]} color="blue" />
-          </MapContainer>
-        </div>
-      )}
+      <div style={{ height: "300px", margin: "1rem auto" }}>
+        <MapContainer
+          center={[20.5937, 78.9629]}
+          zoom={2}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer
+            attribution="© OpenStreetMap contributors"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={[shipment.originLat, shipment.originLong]}>
+            <Popup>Origin: {origin}</Popup>
+          </Marker>
+          <Marker position={[shipment.destLat, shipment.destLong]}>
+            <Popup>Destination: {destination}</Popup>
+          </Marker>
+        </MapContainer>
+      </div>
+
+      <h3 style={{ marginTop: "2rem" }}>📄 Items in Shipment</h3>
+      <table style={{ margin: "auto", borderCollapse: "collapse", width: "90%" }}>
+        <thead>
+          <tr style={{ backgroundColor: "#facc15" }}>
+            <th style={cellStyle}>Item</th>
+            <th style={cellStyle}>Qty</th>
+            <th style={cellStyle}>Boxes</th>
+            <th style={cellStyle}>PO No.</th>
+            <th style={cellStyle}>Inco Terms</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((itm, i) => (
+            <tr key={i}>
+              <td style={cellStyle}>{itm.description}</td>
+              <td style={cellStyle}>{itm.qty}</td>
+              <td style={cellStyle}>{itm.boxes}</td>
+              <td style={cellStyle}>
+                {itm.po}
+                {itm.po && (
+                  <div style={{ marginTop: "0.3rem" }}>
+                    <a
+                      href={`/dummy-po-files/${itm.po}.pdf`}
+                      download
+                      style={{
+                        fontSize: "0.8rem",
+                        color: "#2563eb",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Download PO
+                    </a>
+                  </div>
+                )}
+              </td>
+              <td style={cellStyle}>
+                {itm.inco}
+                {itm.inco === "DPU" && (
+                  <span title="Delivered at Place Unloaded – seller is responsible until delivery."> ℹ️</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
+};
+
+const cellStyle = {
+  border: "1px solid #ddd",
+  padding: "8px",
+  textAlign: "center"
 };
 
 export default ShipmentDetail;

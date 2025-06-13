@@ -3,6 +3,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+const getETAStatus = (eta) => {
+  const today = new Date();
+  const etaDate = new Date(eta);
+  const diff = Math.ceil((etaDate - today) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return "Delayed 🔴";
+  if (diff <= 3) return "At Risk 🟡";
+  return "On Time 🟢";
+};
+
 const ShipmentCard = ({ shipment }) => {
   return (
     <Link to={`/shipment/${shipment.id}`} style={{ textDecoration: "none", color: "inherit" }}>
@@ -21,7 +30,7 @@ const ShipmentCard = ({ shipment }) => {
           <strong>To:</strong> {shipment.destination}
         </p>
         <p>
-          <strong>Status:</strong> {shipment.status}
+          <strong>Status:</strong> {getETAStatus(shipment.eta)}
         </p>
         <p>
           <strong>ETA:</strong> {shipment.eta}
